@@ -237,6 +237,7 @@ test_*.docx
 *.md
 *.txt
 !README.md
+!requirements.txt
 
 
 # Docker
