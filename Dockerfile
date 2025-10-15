@@ -1,5 +1,5 @@
 # 汇享易报告自助生成智能体 - Dockerfile
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 # 设置工作目录
 WORKDIR /app
@@ -42,4 +42,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # 启动应用
 CMD ["python", "app.py"]
-
