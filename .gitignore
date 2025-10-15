@@ -238,3 +238,8 @@ test_*.docx
 *.txt
 !项目说明.md
 
+
+# Docker
+.env
+.dockerignore.bak
+docker-compose.override.yml
