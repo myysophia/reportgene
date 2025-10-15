@@ -236,7 +236,7 @@ test_*.docx
 *.docx
 *.md
 *.txt
-!项目说明.md
+!README.md
 
 
 # Docker
