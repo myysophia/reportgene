@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   reportgene:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: reportgene-app
     ports:
       - "7861:7861"

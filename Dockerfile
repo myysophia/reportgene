@@ -1,5 +1,5 @@
 # 汇享易报告自助生成智能体 - Dockerfile
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # 设置工作目录
 WORKDIR /app
