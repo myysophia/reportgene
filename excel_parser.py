@@ -61,57 +61,63 @@ class ExcelParser:
             sheet_name: sheet名称
         
         Returns:
-            dict: 包含本周和上周人数的字典
+            dict: 包含本周和上周人数及详细信息的字典
         """
         try:
-            # 读取Excel的指定sheet
-            # 如果文件已解密，使用解密后的内容；否则直接读取文件
+            # 读取Excel的指定sheet（不使用header，原始读取）
             excel_source = self.decrypted_file if self.decrypted_file else self.excel_path
             
-            # 自动检测文件格式并使用相应引擎
-            # .xls使用xlrd引擎，.xlsx使用openpyxl引擎
             if self.excel_path.endswith('.xls'):
-                df = pd.read_excel(excel_source, sheet_name=sheet_name, engine='xlrd')
+                df = pd.read_excel(excel_source, sheet_name=sheet_name, engine='xlrd', header=None)
             else:
-                df = pd.read_excel(excel_source, sheet_name=sheet_name, engine='openpyxl')
+                df = pd.read_excel(excel_source, sheet_name=sheet_name, engine='openpyxl', header=None)
             
-            # 检查是否存在"登记时间"列（B列，索引1）
+            # 检查表格格式
             if len(df.columns) < 2:
                 return {'current_week': 0, 'last_week': 0, 'error': '表格格式不正确'}
             
-            # 获取B列（登记时间列）
-            # 列名可能是"登记时间"或者是列索引
-            date_column = df.iloc[:, 1]  # 第2列（B列）
-            
             current_week_count = 0
             last_week_count = 0
+            current_week_persons = []  # 本周人员详细信息
             
-            # 遍历每一行
-            for idx, date_value in enumerate(date_column):
-                # 跳过表头行
-                if idx == 0:
-                    continue
+            # 从第3行开始遍历数据（跳过标题和空行，索引从0开始，实际第3行是索引2）
+            for idx in range(2, len(df)):
+                date_value = df.iloc[idx, 1]  # B列（登记时间）
                 
                 # 解析日期
                 parsed_date = parse_excel_date(date_value)
                 
                 if parsed_date:
+                    # 提取行数据
+                    unit = df.iloc[idx, 9] if pd.notna(df.iloc[idx, 9]) else ""  # 责任单位（J列，索引9）
+                    name = df.iloc[idx, 2] if pd.notna(df.iloc[idx, 2]) else "XX"  # 姓名（C列，索引2）
+                    travel_method = df.iloc[idx, 16] if pd.notna(df.iloc[idx, 16]) else ""  # 进京方式（Q列，索引16）
+                    group_appeal = df.iloc[idx, 18] if pd.notna(df.iloc[idx, 18]) else ""  # 群体诉求（S列，索引18）
+                    
                     # 判断是否在本周
                     if is_date_in_range(parsed_date, self.current_week_start, self.current_week_end):
                         current_week_count += 1
+                        current_week_persons.append({
+                            'unit': str(unit),
+                            'name': str(name),
+                            'travel_method': str(travel_method),
+                            'group_appeal': str(group_appeal)
+                        })
                     # 判断是否在上周
                     elif is_date_in_range(parsed_date, self.last_week_start, self.last_week_end):
                         last_week_count += 1
             
             return {
                 'current_week': current_week_count,
-                'last_week': last_week_count
+                'last_week': last_week_count,
+                'persons': current_week_persons
             }
             
         except Exception as e:
             return {
                 'current_week': 0,
                 'last_week': 0,
+                'persons': [],
                 'error': str(e)
             }
     
@@ -127,6 +133,9 @@ class ExcelParser:
         
         # 解析"gab上访"sheet
         gab_data = self.parse_sheet(self.gab_sheet_name)
+        
+        # 合并本周所有人员
+        all_persons = sunshine_data.get('persons', []) + gab_data.get('persons', [])
         
         # 汇总数据
         result = {
@@ -151,6 +160,20 @@ class ExcelParser:
                 gab_data['last_week']
             ),
             
+            # 格式化的人员信息
+            'sunshine_persons_text': self._format_persons_list(sunshine_data.get('persons', [])),
+            'gab_persons_text': self._format_persons_list(gab_data.get('persons', [])),
+            
+            # 地区统计
+            'area_stats_text': self._format_area_stats(all_persons),
+            
+            # 群体诉求统计
+            'group_appeal_text': self._format_group_appeal_stats(all_persons),
+            
+            # 进京方式统计
+            'travel_road_count': self._count_travel_method(all_persons, '公路'),
+            'travel_stats_text': self._format_travel_stats(all_persons),
+            
             # 错误信息
             'errors': []
         }
@@ -162,6 +185,85 @@ class ExcelParser:
             result['errors'].append(f"gab上访: {gab_data['error']}")
         
         return result
+    
+    def _format_persons_list(self, persons):
+        """格式化人员列表为：单位+姓名 格式"""
+        if not persons:
+            return ""
+        
+        formatted = []
+        for p in persons:
+            unit = p.get('unit', '')
+            name = p.get('name', 'XX')
+            # 隐藏姓名的最后一个字
+            if len(name) > 1:
+                name = name[:-1] + 'X'
+            formatted.append(f"{unit}{name}")
+        
+        return "、".join(formatted)
+    
+    def _format_area_stats(self, persons):
+        """统计各地区人数"""
+        from collections import Counter
+        
+        area_counter = Counter()
+        for p in persons:
+            unit = p.get('unit', '')
+            if unit:
+                area_counter[unit] += 1
+        
+        # 格式化输出
+        stats_parts = []
+        for area, count in sorted(area_counter.items(), key=lambda x: -x[1]):
+            if count > 1:
+                stats_parts.append(f"{area}{count}人")
+            else:
+                stats_parts.append(f"{area}1人")
+        
+        return "，".join(stats_parts) if stats_parts else ""
+    
+    def _format_group_appeal_stats(self, persons):
+        """统计群体诉求类型及人数"""
+        from collections import Counter
+        
+        appeal_counter = Counter()
+        for p in persons:
+            appeal = p.get('group_appeal', '').strip()
+            if appeal and appeal not in ['nan', '']:
+                appeal_counter[appeal] += 1
+        
+        # 格式化输出
+        stats_parts = []
+        for appeal, count in sorted(appeal_counter.items(), key=lambda x: -x[1]):
+            stats_parts.append(f"{appeal}{count}人")
+        
+        return "、".join(stats_parts) if stats_parts else "无"
+    
+    def _count_travel_method(self, persons, method):
+        """统计特定进京方式的人数"""
+        count = 0
+        for p in persons:
+            travel = p.get('travel_method', '').strip()
+            if method in travel:
+                count += 1
+        return count
+    
+    def _format_travel_stats(self, persons):
+        """统计所有进京方式及人数"""
+        from collections import Counter
+        
+        travel_counter = Counter()
+        for p in persons:
+            travel = p.get('travel_method', '').strip()
+            if travel and travel not in ['nan', '']:
+                travel_counter[travel] += 1
+        
+        # 格式化输出
+        stats_parts = []
+        for travel, count in sorted(travel_counter.items(), key=lambda x: -x[1]):
+            stats_parts.append(f"{travel}{count}人")
+        
+        return "、".join(stats_parts) if stats_parts else "无"
     
     def _calculate_trend(self, current, last):
         """

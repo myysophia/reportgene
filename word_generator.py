@@ -36,6 +36,7 @@ class WordGenerator:
             
             # 准备替换数据
             replacements = {
+                # 基础统计
                 '{{total_count}}': str(data.get('total_current', 0)),
                 '{{sunshine_count}}': str(data.get('sunshine_current', 0)),
                 '{{last_week_sunshine}}': str(data.get('sunshine_last', 0)),
@@ -43,6 +44,16 @@ class WordGenerator:
                 '{{gab_count}}': str(data.get('gab_current', 0)),
                 '{{last_week_gab}}': str(data.get('gab_last', 0)),
                 '{{gab_trend}}': data.get('gab_trend', '持平'),
+                
+                # 人员信息
+                '{{sunshine_persons}}': data.get('sunshine_persons_text', ''),
+                '{{gab_persons}}': data.get('gab_persons_text', ''),
+                
+                # 统计分析
+                '{{area_stats}}': data.get('area_stats_text', ''),
+                '{{group_appeal}}': data.get('group_appeal_text', '无'),
+                '{{travel_road_count}}': str(data.get('travel_road_count', 0)),
+                '{{travel_stats}}': data.get('travel_stats_text', '无'),
             }
             
             # 遍历所有段落，替换占位符
