@@ -18,6 +18,16 @@ DEFAULT_PASSWORD = "110110"
 UPLOAD_DIR = os.path.join(BASE_DIR, "upload")
 TEMPLATE_PATH = os.path.join(BASE_DIR, "template.docx")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
+VERSION_FILE = os.path.join(BASE_DIR, "version.txt")
+
+
+def get_version():
+    """读取版本号"""
+    try:
+        with open(VERSION_FILE, 'r', encoding='utf-8') as f:
+            return f.read().strip()
+    except:
+        return "v1.0"
 
 
 def upload_file(file):
@@ -160,10 +170,35 @@ def generate_report(upload_path, output_filename, password):
 def create_ui():
     """创建Gradio用户界面"""
     
-    with gr.Blocks(title="汇享易报告自助生成智能体", theme=gr.themes.Soft()) as app:
+    version = get_version()
+    
+    with gr.Blocks(
+        title="汇享易报告自助生成智能体", 
+        theme=gr.themes.Soft(),
+        css="""
+        footer {visibility: hidden}
+        .version-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+        """
+    ) as app:
+        gr.HTML(f'<div class="version-badge">版本 {version}</div>')
+        
         gr.Markdown(
             """
-            # 🤖 汇享易报告自助生成智能体
+            <div style="text-align: center;">
+            <h1>🤖 汇享易报告自助生成智能体</h1>
+            </div>
             
             上传您的Excel文件，系统将自动解析数据并生成Word报告
             """
