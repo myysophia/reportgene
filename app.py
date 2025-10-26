@@ -328,19 +328,18 @@ def generate_report(upload_path, output_filename, password):
             return None, error_msg, ""
         
         # 显示统计结果
-        stats_msg = f"""
-✅ Excel解析成功！
+        stats_msg = f"""✅ Excel解析成功！
+
+📅 统计时间范围：
+  • 本周: {parser.current_week_start.strftime('%Y-%m-%d')} 至 {parser.current_week_end.strftime('%Y-%m-%d')}
+  • 上周: {parser.last_week_start.strftime('%Y-%m-%d')} 至 {parser.last_week_end.strftime('%Y-%m-%d')}
 
 📈 数据统计：
-  • 本周日期范围: {parser.current_week_start.strftime('%Y-%m-%d')} 到 {parser.current_week_end.strftime('%Y-%m-%d')}
-  • 上周日期范围: {parser.last_week_start.strftime('%Y-%m-%d')} 到 {parser.last_week_end.strftime('%Y-%m-%d')}
-
   • 阳光xf登记: 本周 {data['sunshine_current']} 人，上周 {data['sunshine_last']} 人，{data['sunshine_trend']}
   • gab上访: 本周 {data['gab_current']} 人，上周 {data['gab_last']} 人，{data['gab_trend']}
   • 本周总计: {data['total_current']} 人
 
-📝 正在生成Word文档...
-"""
+📝 正在生成Word文档..."""
         print(stats_msg)
         
         # 步骤2: 生成Word文档
@@ -353,8 +352,11 @@ def generate_report(upload_path, output_filename, password):
             # 生成预览内容
             preview_content = preview_word_document(output_path)
             
-            final_msg = f"""
-✅ 报告生成成功！
+            final_msg = f"""✅ 报告生成成功！
+
+📅 统计时间范围：
+  • 本周: {parser.current_week_start.strftime('%Y-%m-%d')} 至 {parser.current_week_end.strftime('%Y-%m-%d')}
+  • 上周: {parser.last_week_start.strftime('%Y-%m-%d')} 至 {parser.last_week_end.strftime('%Y-%m-%d')}
 
 📊 统计数据：
   • 阳光xf登记: 本周 {data['sunshine_current']} 人，上周 {data['sunshine_last']} 人，{data['sunshine_trend']}
