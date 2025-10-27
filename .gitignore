@@ -238,6 +238,7 @@ test_*.docx
 *.txt
 !README.md
 !requirements.txt
+!version.txt
 
 
 # Docker
