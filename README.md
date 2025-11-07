@@ -1,6 +1,8 @@
 # 🤖 汇享易报告自助生成智能体
 
-基于Python + Gradio的Word报告自动生成系统，可自动解析Excel数据并生成格式化的Word报告。
+基于Python + Gradio的Word报告自动生成系统，AI 自动解析Excel数据并自动按照格式生成Word报告。
+<img width="2698" height="2753" alt="CleanShot 2025-11-07 at 19 51 57@2x" src="https://github.com/user-attachments/assets/bde5e49d-183d-4f7a-bab5-2fa63f672d5f" />
+
 
 ## ✨ 功能特性
 
